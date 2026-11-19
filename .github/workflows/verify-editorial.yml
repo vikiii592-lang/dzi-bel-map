@@ -1,0 +1,27 @@
+name: Verify editorial school graphic
+on:
+  push:
+    branches: [main]
+    paths: ["graphic/**", "qa/editorial-*", ".github/workflows/verify-editorial.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  editorial-iframe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-save playwright
+      - run: npx playwright install chromium
+      - run: node qa/editorial-iframe.mjs
+        env:
+          PUBLIC_MAP_URL: https://vikiii592-lang.github.io/dzi-bel-map/graphic/
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: editorial-iframe-results
+          path: editorial-qa-results/

@@ -26,7 +26,9 @@
     for (const record of schools) markers.get(record.code).setIcon(schoolIcon(record));
     const marker = markers.get(school.code);
     if (focusMap) {
-      map.setView(marker.getLatLng(), 16, { animate: !window.matchMedia('(prefers-reduced-motion: reduce)').matches });
+      map.stop();
+      map.closePopup();
+      map.setView(marker.getLatLng(), 16, { animate: false });
       if (typeof cluster.zoomToShowLayer === 'function') cluster.zoomToShowLayer(marker, () => marker.openPopup());
       else marker.openPopup();
     }
@@ -48,18 +50,18 @@
       elements['school-list'].append(button);
     }
     if (!visible.length) elements['school-list'].innerHTML = '<p class="empty-list">Няма намерени училища.</p>';
-    if (cluster) { cluster.clearLayers(); for (const school of visible) cluster.addLayer(markers.get(school.code)); }
+    if (cluster) { map.closePopup(); cluster.clearLayers(); for (const school of visible) cluster.addLayer(markers.get(school.code)); }
   }
 
   if (typeof window.L !== 'undefined') {
     document.documentElement.classList.add('live-map');
-    map = L.map('map', { scrollWheelZoom: true }).setView([42.7, 25.2], 7);
+    map = L.map('map', { scrollWheelZoom: true, zoomAnimation: false, fadeAnimation: false, markerZoomAnimation: false }).setView([42.7, 25.2], 7);
     const tiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' }).addTo(map);
     let loadedTiles = 0;
     let failedTiles = 0;
     tiles.on('tileload', () => { loadedTiles++; });
     tiles.on('tileerror', () => { failedTiles++; if (!loadedTiles && failedTiles >= 3 && map) { map.remove(); map = null; cluster = null; document.documentElement.classList.remove('live-map'); } });
-    cluster = L.markerClusterGroup({ maxClusterRadius: 35, showCoverageOnHover: false, spiderfyOnMaxZoom: true, iconCreateFunction: group => {
+    cluster = L.markerClusterGroup({ animate: false, maxClusterRadius: 35, showCoverageOnHover: false, spiderfyOnMaxZoom: true, iconCreateFunction: group => {
       return L.divIcon({ className: 'pin-cluster', html: String(group.getChildCount()), iconSize: [36, 36], iconAnchor: [18, 18] });
     } });
     for (const school of schools) {
